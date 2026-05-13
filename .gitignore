@@ -3,3 +3,6 @@ build/
 .env
 *.log
 data.db
+
+# Colyseus Cloud CLI deploy token — must not be committed
+.colyseus-cloud.json

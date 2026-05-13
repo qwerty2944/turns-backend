@@ -122,7 +122,7 @@ export class LoveLetterRoom extends Room {
         kind: "system",
         actor: p.nickname,
       });
-      this.disposeIfEmpty();
+      this.disposeIfBelowMin();
       return;
     }
 
@@ -147,13 +147,23 @@ export class LoveLetterRoom extends Room {
       const idx = this.state.turnOrder.indexOf(client.sessionId);
       if (idx >= 0) this.state.turnOrder.splice(idx, 1);
       this.checkRoundEnd();
-      this.disposeIfEmpty();
+      this.disposeIfBelowMin();
     }
   }
 
-  private disposeIfEmpty() {
+  private disposeIfBelowMin() {
+    // Empty room — drop it regardless of phase.
     if (this.state.players.size === 0) {
       this.disconnect().catch(() => {});
+      return;
+    }
+    // Game already started but no longer enough players to continue:
+    // 러브레터는 최소 2명. 1명 남았으면 라운드/게임 자체가 무의미하므로 방 폭파.
+    const MIN_PLAYERS = 2;
+    if (this.state.phase !== "lobby" && this.state.players.size < MIN_PLAYERS) {
+      this.pushLog(`👋 인원 부족으로 방이 종료됩니다`, { kind: "system" });
+      // Slight delay so clients see the final log line before the socket closes.
+      this.clock.setTimeout(() => this.disconnect().catch(() => {}), 600);
     }
   }
 

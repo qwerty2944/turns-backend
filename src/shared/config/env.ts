@@ -1,10 +1,15 @@
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = (process.env.DATABASE_URL ?? "").trim();
 if (!databaseUrl) {
-  throw new Error("DATABASE_URL is required");
+  throw new Error(
+    "DATABASE_URL is required (Colyseus Cloud → Environment Variables tab)",
+  );
 }
+
+const jwtSecret =
+  (process.env.JWT_SECRET ?? "").trim() || "dev-secret-change-me";
 
 export const env = {
   port: Number(process.env.PORT || 2567),
-  jwtSecret: process.env.JWT_SECRET || "dev-secret-change-me",
+  jwtSecret,
   databaseUrl,
 };

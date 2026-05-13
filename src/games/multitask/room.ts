@@ -361,15 +361,8 @@ export class MultitaskRoom extends Room {
     const elapsed = now - this.state.startedAt;
     const newDiff = difficultyFor(elapsed);
     if (newDiff !== this.state.difficulty) {
-      const prevDiff = this.state.difficulty;
       this.state.difficulty = newDiff;
       this.pushLog(`⚡ 난이도 ${newDiff} — 속도 증가!`, { kind: "system" });
-      if (prevDiff < 2 && newDiff >= 2) {
-        this.pushLog("🎯 새 태스크 — 탭 등장!", { kind: "system" });
-      }
-      if (prevDiff < 3 && newDiff >= 3) {
-        this.pushLog("⚠️ 새 태스크 — 닷지 시작!", { kind: "system" });
-      }
     }
 
     if (now - this.lastNowSync > SERVER_NOW_SYNC_MS) {
@@ -381,10 +374,9 @@ export class MultitaskRoom extends Room {
       if (!p.alive) continue;
       const ctx = this.per.get(p.sessionId);
       if (!ctx) continue;
-      // Tasks unlock progressively: hold from diff 1, tap from diff 2, dodge from diff 3.
       this.tickHold(p, ctx, now);
-      if (this.state.difficulty >= 2) this.tickTap(p, ctx, now);
-      if (this.state.difficulty >= 3) this.tickDodge(p, ctx, now);
+      this.tickTap(p, ctx, now);
+      this.tickDodge(p, ctx, now);
       if (p.hearts <= 0 && p.alive) {
         p.alive = false;
         p.hearts = 0;

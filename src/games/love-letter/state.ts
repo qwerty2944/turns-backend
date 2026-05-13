@@ -1,5 +1,6 @@
 import "../../shared/polyfill.js";
 import { Schema, ArraySchema, MapSchema, type } from "@colyseus/schema";
+import { Spectator } from "../../shared/colyseus/spectator.js";
 
 export class Player extends Schema {
   @type("string") sessionId: string = "";
@@ -44,4 +45,6 @@ export class LoveLetterState extends Schema {
   @type([LogEntry]) log = new ArraySchema<LogEntry>();
 
   @type("string") pendingAction: string = "";
+
+  @type({ map: Spectator }) spectators = new MapSchema<Spectator>();
 }

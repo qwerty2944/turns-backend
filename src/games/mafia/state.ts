@@ -1,5 +1,6 @@
 import "../../shared/polyfill.js";
 import { Schema, ArraySchema, MapSchema, type } from "@colyseus/schema";
+import { Spectator } from "../../shared/colyseus/spectator.js";
 
 export class MafiaPlayer extends Schema {
   @type("string") sessionId: string = "";
@@ -44,4 +45,6 @@ export class MafiaState extends Schema {
   @type("string") winners: string = ""; // "wolves" | "villagers" | ""
 
   @type([LogEntry]) log = new ArraySchema<LogEntry>();
+
+  @type({ map: Spectator }) spectators = new MapSchema<Spectator>();
 }

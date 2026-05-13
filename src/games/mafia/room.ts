@@ -1,6 +1,7 @@
 import { Room, Client, CloseCode } from "colyseus";
 import { MafiaState, MafiaPlayer, LogEntry } from "./state.js";
 import { verifyAuthRequest } from "../../shared/auth/middleware.js";
+import { Spectator, isSpectator } from "../../shared/colyseus/spectator.js";
 import {
   MIN_PLAYERS,
   MAX_PLAYERS,
@@ -57,12 +58,14 @@ export class MafiaRoom extends Room {
     this.setMetadata({ roomName: this.state.roomName });
 
     this.onMessage("toggleReady", (client) => {
+      if (isSpectator(client)) return;
       const p = this.state.players.get(client.sessionId);
       if (!p || this.state.phase !== "lobby") return;
       p.ready = !p.ready;
     });
 
     this.onMessage("startGame", (client) => {
+      if (isSpectator(client)) return;
       if (client.sessionId !== this.state.hostSessionId) return;
       if (this.state.phase !== "lobby") return;
       if (this.state.players.size < MIN_PLAYERS) return;
@@ -74,6 +77,7 @@ export class MafiaRoom extends Room {
     });
 
     this.onMessage("chat", (client, msg: string) => {
+      if (isSpectator(client)) return;
       const p = this.state.players.get(client.sessionId);
       if (!p || typeof msg !== "string") return;
       this.pushLog(`💬 ${p.nickname}: ${msg.slice(0, 160)}`, {
@@ -83,6 +87,7 @@ export class MafiaRoom extends Room {
     });
 
     this.onMessage("wolfChat", (client, msg: string) => {
+      if (isSpectator(client)) return;
       const p = this.state.players.get(client.sessionId);
       if (!p || !p.alive) return;
       if (this.store.roles.get(client.sessionId) !== ROLE.WOLF) return;
@@ -99,10 +104,12 @@ export class MafiaRoom extends Room {
     });
 
     this.onMessage("nightAction", (client, payload: NightAction) => {
+      if (isSpectator(client)) return;
       this.handleNightAction(client, payload);
     });
 
     this.onMessage("vote", (client, payload: { targetId: string | null }) => {
+      if (isSpectator(client)) return;
       this.handleVote(client, payload?.targetId ?? null);
     });
   }
@@ -118,7 +125,21 @@ export class MafiaRoom extends Room {
     return payload;
   }
 
-  onJoin(client: Client, _options: JoinOptions, auth: any) {
+  onJoin(client: Client, options: JoinOptions & { spectator?: boolean }, auth: any) {
+    if (options?.spectator) {
+      client.userData = { spectator: true };
+      const s = new Spectator();
+      s.sessionId = client.sessionId;
+      s.userId = auth.userId;
+      s.nickname = auth.nickname;
+      this.state.spectators.set(client.sessionId, s);
+      this.pushLog(`👁 ${auth.nickname} 관전 시작`, {
+        kind: "system",
+        actor: auth.nickname,
+      });
+      return;
+    }
+
     if (this.state.phase !== "lobby") {
       throw new Error("게임이 이미 시작됨");
     }
@@ -138,6 +159,17 @@ export class MafiaRoom extends Room {
   }
 
   async onLeave(client: Client, code?: number) {
+    if (this.state.spectators.has(client.sessionId)) {
+      const s = this.state.spectators.get(client.sessionId);
+      this.state.spectators.delete(client.sessionId);
+      if (s) {
+        this.pushLog(`👁 ${s.nickname} 관전 종료`, {
+          kind: "system",
+          actor: s.nickname,
+        });
+      }
+      return;
+    }
     const p = this.state.players.get(client.sessionId);
     if (!p) return;
     p.connected = false;

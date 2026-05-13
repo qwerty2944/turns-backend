@@ -4,11 +4,13 @@ import {
   hashPassword,
   verifyPassword,
 } from "../../shared/auth/password.js";
-import { signToken, verifyToken } from "../../shared/auth/jwt.js";
+import { signToken } from "../../shared/auth/jwt.js";
+import { requireAuth } from "../../shared/auth/middleware.js";
 
 const router = Router();
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const nicknameRegex = /^[\p{L}\p{N}_-]{2,12}$/u;
 
 router.post("/signup", async (req: Request, res: Response) => {
   const { email, password, passwordConfirm, nickname } = req.body ?? {};
@@ -57,7 +59,7 @@ router.post("/login", async (req: Request, res: Response) => {
       .status(401)
       .json({ error: "이메일 또는 비밀번호가 잘못되었습니다" });
   }
-  const valid = await verifyPassword(password, user.password_hash);
+  const valid = await verifyPassword(password, user.passwordHash);
   if (!valid) {
     return res
       .status(401)
@@ -75,17 +77,65 @@ router.post("/login", async (req: Request, res: Response) => {
   });
 });
 
-router.get("/me", (req: Request, res: Response) => {
-  const auth = req.headers.authorization;
-  if (!auth?.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "인증이 필요합니다" });
-  }
-  const token = auth.slice("Bearer ".length);
-  const payload = verifyToken(token);
-  if (!payload) {
-    return res.status(401).json({ error: "토큰이 유효하지 않습니다" });
-  }
-  return res.json({ user: payload });
+router.get("/me", requireAuth, (req: Request, res: Response) => {
+  return res.json({ user: req.user });
 });
+
+router.patch(
+  "/me/nickname",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    const raw = (req.body?.nickname ?? "").toString().trim();
+    if (!nicknameRegex.test(raw)) {
+      return res
+        .status(400)
+        .json({ error: "닉네임은 2~12자, 한글/영문/숫자/_- 만 가능합니다" });
+    }
+    const updated = await userRepo.updateNickname(req.user!.userId, raw);
+    const token = signToken({
+      userId: Number(updated.id),
+      email: updated.email,
+      nickname: updated.nickname,
+    });
+    return res.json({
+      token,
+      user: {
+        id: Number(updated.id),
+        email: updated.email,
+        nickname: updated.nickname,
+      },
+    });
+  },
+);
+
+router.patch(
+  "/me/password",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    const { currentPassword, newPassword } = req.body ?? {};
+    if (
+      typeof currentPassword !== "string" ||
+      typeof newPassword !== "string"
+    ) {
+      return res.status(400).json({ error: "현재 및 새 비밀번호를 입력해주세요" });
+    }
+    if (newPassword.length < 6) {
+      return res
+        .status(400)
+        .json({ error: "새 비밀번호는 6자 이상이어야 합니다" });
+    }
+    const user = await userRepo.findById(req.user!.userId);
+    if (!user) {
+      return res.status(404).json({ error: "사용자를 찾을 수 없습니다" });
+    }
+    const valid = await verifyPassword(currentPassword, user.passwordHash);
+    if (!valid) {
+      return res.status(401).json({ error: "현재 비밀번호가 일치하지 않습니다" });
+    }
+    const hash = await hashPassword(newPassword);
+    await userRepo.updatePassword(req.user!.userId, hash);
+    return res.json({ ok: true });
+  },
+);
 
 export default router;

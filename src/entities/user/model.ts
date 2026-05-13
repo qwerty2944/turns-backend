@@ -1,24 +1,22 @@
-// In-memory user store. Wiped on process restart — fine for MVP, swap to a
-// real DB later (the public API surface here is what auth/routes.ts consumes).
-export type UserRow = {
-  id: number;
-  email: string;
-  password_hash: string;
-  nickname: string;
-  created_at: number;
-};
+import { eq } from "drizzle-orm";
+import { db } from "../../shared/db/index.js";
+import { users, type UserRow } from "../../shared/db/schema.js";
 
-const byId = new Map<number, UserRow>();
-const byEmail = new Map<string, UserRow>();
-let nextId = 1;
+export type { UserRow };
 
 export const userRepo = {
   async findByEmail(email: string): Promise<UserRow | undefined> {
-    return byEmail.get(email.toLowerCase());
+    const [row] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
+      .limit(1);
+    return row;
   },
 
   async findById(id: number): Promise<UserRow | undefined> {
-    return byId.get(id);
+    const [row] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    return row;
   },
 
   async create(
@@ -26,15 +24,28 @@ export const userRepo = {
     passwordHash: string,
     nickname: string,
   ): Promise<UserRow> {
-    const row: UserRow = {
-      id: nextId++,
-      email,
-      password_hash: passwordHash,
-      nickname,
-      created_at: Date.now(),
-    };
-    byId.set(row.id, row);
-    byEmail.set(email.toLowerCase(), row);
+    const [row] = await db
+      .insert(users)
+      .values({
+        email: email.toLowerCase(),
+        passwordHash,
+        nickname,
+        createdAt: Date.now(),
+      })
+      .returning();
     return row;
+  },
+
+  async updateNickname(id: number, nickname: string): Promise<UserRow> {
+    const [row] = await db
+      .update(users)
+      .set({ nickname })
+      .where(eq(users.id, id))
+      .returning();
+    return row;
+  },
+
+  async updatePassword(id: number, passwordHash: string): Promise<void> {
+    await db.update(users).set({ passwordHash }).where(eq(users.id, id));
   },
 };

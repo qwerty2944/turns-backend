@@ -3,6 +3,22 @@
 How the Colyseus side of `turns` ships to production. Read this first
 before debugging "why isn't my code live."
 
+## Live URLs
+
+| What | URL |
+|---|---|
+| Colyseus Cloud dashboard | https://cloud-prod.colyseus.io/application/1510-turns/ |
+| Production HTTP endpoint | `https://kr-icn-41b6e883.colyseus.cloud` |
+| Production WebSocket endpoint | `wss://kr-icn-41b6e883.colyseus.cloud` |
+| Cloud app slug · port | `1510-turns` · 2037 |
+
+The frontend's `NEXT_PUBLIC_BACKEND_URL` and `NEXT_PUBLIC_COLYSEUS_URL`
+(set on Vercel for project `hackuva/turns`, production env) must point
+at these. If you ever see "Network Error" / "Failed to fetch" in the
+lobby with a healthy backend, that's almost always a stale or empty
+Vercel env var — `npx vercel env pull /tmp/x.env --environment=production`
+to inspect.
+
 ## TL;DR
 
 ```bash

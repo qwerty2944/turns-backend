@@ -1,7 +1,7 @@
 import { Room, Client, CloseCode } from "colyseus";
 import { ArraySchema } from "@colyseus/schema";
 import { LoveLetterState, Player, LogEntry } from "./state.js";
-import { verifyToken } from "../../shared/auth/jwt.js";
+import { verifyAuthRequest } from "../../shared/auth/middleware.js";
 import {
   CARD,
   CARD_NAMES_KR,
@@ -80,10 +80,14 @@ export class LoveLetterRoom extends Room {
     });
   }
 
-  onAuth(_client: Client, options: JoinOptions) {
+  async onAuth(_client: Client, options: JoinOptions) {
     if (!options.token) throw new Error("토큰 없음");
-    const payload = verifyToken(options.token);
-    if (!payload) throw new Error("토큰 유효하지 않음");
+    const payload = await verifyAuthRequest(options.token);
+    if (!payload) {
+      throw new Error(
+        "다른 브라우저에서 로그인되었거나 토큰이 만료되었습니다",
+      );
+    }
     return payload;
   }
 

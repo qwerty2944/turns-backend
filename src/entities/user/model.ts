@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "../../shared/db/index.js";
 import { users, type UserRow } from "../../shared/db/schema.js";
 
@@ -47,5 +47,14 @@ export const userRepo = {
 
   async updatePassword(id: number, passwordHash: string): Promise<void> {
     await db.update(users).set({ passwordHash }).where(eq(users.id, id));
+  },
+
+  async bumpTokenVersion(id: number): Promise<number> {
+    const [row] = await db
+      .update(users)
+      .set({ tokenVersion: sql`${users.tokenVersion} + 1` })
+      .where(eq(users.id, id))
+      .returning();
+    return row?.tokenVersion ?? 0;
   },
 };

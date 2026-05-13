@@ -1,6 +1,6 @@
 import { Room, Client, CloseCode } from "colyseus";
 import { MafiaState, MafiaPlayer, LogEntry } from "./state.js";
-import { verifyToken } from "../../shared/auth/jwt.js";
+import { verifyAuthRequest } from "../../shared/auth/middleware.js";
 import {
   MIN_PLAYERS,
   MAX_PLAYERS,
@@ -107,10 +107,14 @@ export class MafiaRoom extends Room {
     });
   }
 
-  onAuth(_client: Client, options: JoinOptions) {
+  async onAuth(_client: Client, options: JoinOptions) {
     if (!options.token) throw new Error("토큰 없음");
-    const payload = verifyToken(options.token);
-    if (!payload) throw new Error("토큰 유효하지 않음");
+    const payload = await verifyAuthRequest(options.token);
+    if (!payload) {
+      throw new Error(
+        "다른 브라우저에서 로그인되었거나 토큰이 만료되었습니다",
+      );
+    }
     return payload;
   }
 

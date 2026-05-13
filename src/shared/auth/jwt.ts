@@ -5,6 +5,7 @@ export type AuthPayload = {
   userId: number;
   email: string;
   nickname: string;
+  tokenVersion: number;
 };
 
 export const signToken = (payload: AuthPayload): string =>
@@ -18,6 +19,8 @@ export const verifyToken = (token: string): AuthPayload | null => {
       userId: decoded.userId,
       email: decoded.email,
       nickname: decoded.nickname,
+      tokenVersion:
+        typeof decoded.tokenVersion === "number" ? decoded.tokenVersion : 0,
     };
   } catch {
     return null;

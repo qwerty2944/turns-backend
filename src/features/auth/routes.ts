@@ -41,6 +41,7 @@ router.post("/signup", async (req: Request, res: Response) => {
     userId,
     email: user.email,
     nickname: user.nickname,
+    tokenVersion: user.tokenVersion,
   });
   return res.json({
     token,
@@ -65,11 +66,15 @@ router.post("/login", async (req: Request, res: Response) => {
       .status(401)
       .json({ error: "이메일 또는 비밀번호가 잘못되었습니다" });
   }
+  // Every successful login bumps the user's token version so any older
+  // browser/tab logged in as this user has its JWT invalidated.
+  const tokenVersion = await userRepo.bumpTokenVersion(Number(user.id));
   const userId = Number(user.id);
   const token = signToken({
     userId,
     email: user.email,
     nickname: user.nickname,
+    tokenVersion,
   });
   return res.json({
     token,
@@ -96,6 +101,7 @@ router.patch(
       userId: Number(updated.id),
       email: updated.email,
       nickname: updated.nickname,
+      tokenVersion: updated.tokenVersion,
     });
     return res.json({
       token,
@@ -134,6 +140,8 @@ router.patch(
     }
     const hash = await hashPassword(newPassword);
     await userRepo.updatePassword(req.user!.userId, hash);
+    // Force-logout every other browser/tab — they'll get 401 on next call.
+    await userRepo.bumpTokenVersion(req.user!.userId);
     return res.json({ ok: true });
   },
 );

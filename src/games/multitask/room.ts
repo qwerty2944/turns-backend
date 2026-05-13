@@ -311,7 +311,13 @@ export class MultitaskRoom extends Room {
 
   private checkMatchEnd() {
     if (this.state.phase !== "playing") return;
+    const total = this.state.players.size;
     const alive = Array.from(this.state.players.values()).filter((p) => p.alive);
+    if (total <= 1) {
+      // Solo: end only when the lone player dies; otherwise let the timer run.
+      if (alive.length === 0) this.declareWinner(null);
+      return;
+    }
     if (alive.length <= 1) {
       this.declareWinner(alive[0] ?? null);
     }

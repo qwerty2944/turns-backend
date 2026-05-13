@@ -52,6 +52,7 @@ export class TetrisState extends Schema {
   @type("string") phase: string = "lobby";
   @type("number") maxPlayers: number = 6;
   @type("number") tokensToWin: number = 3;
+  @type("boolean") maskNicknames: boolean = false;
 
   @type({ map: PlayerBoard }) players = new MapSchema<PlayerBoard>();
   @type(["string"]) seatOrder = new ArraySchema<string>();

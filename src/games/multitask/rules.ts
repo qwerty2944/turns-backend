@@ -25,7 +25,8 @@ export const TAP_BASE_LIFETIME_MS = 1500;
 export const TAP_MIN_LIFETIME_MS = 700;
 export const TAP_BASE_INTERVAL_MS = 1400;
 export const TAP_MIN_INTERVAL_MS = 650;
-export const TAP_MAX_ACTIVE = 4;
+export const TAP_MAX_ACTIVE = 3;
+export const TAP_GRID_CELLS = 9;  // 3×3 grid
 export const TAP_MISS_THRESHOLD = 3;        // consecutive misses → -1 heart
 
 /** Dodge task. */
@@ -71,9 +72,9 @@ export const pickHoldZone = (diff: number): [number, number] => {
 
 /** Choose a tap-target grid cell that's not currently occupied. Returns -1 if full. */
 export const pickTapCell = (occupied: Set<number>): number => {
-  if (occupied.size >= 16) return -1;
+  if (occupied.size >= TAP_GRID_CELLS) return -1;
   const free: number[] = [];
-  for (let i = 0; i < 16; i++) if (!occupied.has(i)) free.push(i);
+  for (let i = 0; i < TAP_GRID_CELLS; i++) if (!occupied.has(i)) free.push(i);
   return free[Math.floor(Math.random() * free.length)];
 };
 

@@ -29,11 +29,13 @@ import {
 } from "./rules.js";
 import { verifyAuthRequest } from "../../shared/auth/middleware.js";
 import { Spectator, isSpectator } from "../../shared/colyseus/spectator.js";
+import { pickMasks } from "../../shared/colyseus/mask-nicknames.js";
 
 type JoinOptions = {
   token?: string;
   roomName?: string;
   maxPlayers?: number;
+  maskNicknames?: boolean;
 };
 
 type InputAction =
@@ -68,6 +70,7 @@ export class TetrisRoom extends Room {
       MAX_PLAYERS,
       Math.max(MIN_PLAYERS, options.maxPlayers || MAX_PLAYERS),
     );
+    this.state.maskNicknames = Boolean(options.maskNicknames);
     this.maxClients = this.state.maxPlayers;
     this.setMetadata({ roomName: this.state.roomName });
 
@@ -242,6 +245,12 @@ export class TetrisRoom extends Room {
   private startNewGame() {
     for (const p of this.state.players.values()) p.tokens = 0;
     this.state.lastWinnerId = "";
+    if (this.state.maskNicknames) {
+      const players = Array.from(this.state.players.values());
+      const masks = pickMasks(players.length);
+      players.forEach((p, i) => { p.nickname = masks[i]; });
+      this.pushLog("🎭 닉네임이 가려졌습니다", { kind: "system" });
+    }
     this.startRound();
   }
 

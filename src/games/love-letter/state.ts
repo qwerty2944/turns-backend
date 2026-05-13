@@ -32,6 +32,7 @@ export class LoveLetterState extends Schema {
   @type("string") phase: string = "lobby"; // lobby | playing | roundEnd | gameEnd
   @type("number") maxPlayers: number = 4;
   @type("number") tokensToWin: number = 4;
+  @type("boolean") maskNicknames: boolean = false;
 
   @type({ map: Player }) players = new MapSchema<Player>();
   @type(["string"]) turnOrder = new ArraySchema<string>();

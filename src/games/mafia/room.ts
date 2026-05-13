@@ -2,6 +2,7 @@ import { Room, Client, CloseCode } from "colyseus";
 import { MafiaState, MafiaPlayer, LogEntry } from "./state.js";
 import { verifyAuthRequest } from "../../shared/auth/middleware.js";
 import { Spectator, isSpectator } from "../../shared/colyseus/spectator.js";
+import { pickMasks } from "../../shared/colyseus/mask-nicknames.js";
 import {
   MIN_PLAYERS,
   MAX_PLAYERS,
@@ -18,6 +19,7 @@ type JoinOptions = {
   token?: string;
   roomName?: string;
   maxPlayers?: number;
+  maskNicknames?: boolean;
 };
 
 type NightAction = { kind: "wolf" | "doctor" | "seer"; targetId: string };
@@ -54,6 +56,7 @@ export class MafiaRoom extends Room {
       MAX_PLAYERS,
       Math.max(MIN_PLAYERS, options.maxPlayers || 8),
     );
+    this.state.maskNicknames = Boolean(options.maskNicknames);
     this.maxClients = this.state.maxPlayers;
     this.setMetadata({ roomName: this.state.roomName });
 
@@ -246,6 +249,16 @@ export class MafiaRoom extends Room {
       p.revealedRole = "";
       p.voteTarget = "";
     });
+
+    // Apply nickname masking (before wolfTeam is broadcast so wolves see masked names too).
+    if (this.state.maskNicknames) {
+      const players = ids
+        .map((sid) => this.state.players.get(sid))
+        .filter((p): p is MafiaPlayer => !!p);
+      const masks = pickMasks(players.length);
+      players.forEach((p, i) => { p.nickname = masks[i]; });
+      this.pushLog("🎭 닉네임이 가려졌습니다", { kind: "system" });
+    }
 
     // Tell each client their role
     for (const c of this.clients) {

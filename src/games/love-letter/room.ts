@@ -3,6 +3,7 @@ import { ArraySchema } from "@colyseus/schema";
 import { LoveLetterState, Player, LogEntry } from "./state.js";
 import { verifyAuthRequest } from "../../shared/auth/middleware.js";
 import { Spectator, isSpectator } from "../../shared/colyseus/spectator.js";
+import { pickMasks } from "../../shared/colyseus/mask-nicknames.js";
 import {
   CARD,
   CARD_NAMES_KR,
@@ -15,6 +16,7 @@ type JoinOptions = {
   token?: string;
   roomName?: string;
   maxPlayers?: number;
+  maskNicknames?: boolean;
 };
 
 type PlayPayload = {
@@ -41,6 +43,7 @@ export class LoveLetterRoom extends Room {
   onCreate(options: JoinOptions) {
     this.state.roomName = (options.roomName || "Room").slice(0, 24);
     this.state.maxPlayers = Math.min(4, Math.max(2, options.maxPlayers || 4));
+    this.state.maskNicknames = Boolean(options.maskNicknames);
     this.maxClients = this.state.maxPlayers;
     this.setMetadata({ roomName: this.state.roomName });
 
@@ -207,7 +210,18 @@ export class LoveLetterRoom extends Room {
   private startNewGame() {
     for (const p of this.state.players.values()) p.tokens = 0;
     this.state.lastWinnerId = "";
+    this.applyMasksIfEnabled();
     this.startRound();
+  }
+
+  private applyMasksIfEnabled() {
+    if (!this.state.maskNicknames) return;
+    const players = Array.from(this.state.players.values());
+    const masks = pickMasks(players.length);
+    for (let i = 0; i < players.length; i++) {
+      players[i].nickname = masks[i];
+    }
+    this.pushLog("🎭 닉네임이 가려졌습니다", { kind: "system" });
   }
 
   private startRound() {

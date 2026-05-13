@@ -58,6 +58,7 @@ export class MultitaskState extends Schema {
   // lobby | playing | gameEnd
   @type("string") phase: string = "lobby";
   @type("number") maxPlayers: number = 8;
+  @type("boolean") maskNicknames: boolean = false;
 
   @type("number") startedAt: number = 0;
   @type("number") endsAt: number = 0;       // 3-min hard timeout

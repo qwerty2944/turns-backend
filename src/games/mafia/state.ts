@@ -33,6 +33,7 @@ export class MafiaState extends Schema {
   // lobby | night | nightReveal | day | vote | voteReveal | roleReveal | gameEnd
   @type("string") phase: string = "lobby";
   @type("number") maxPlayers: number = 8;
+  @type("boolean") maskNicknames: boolean = false;
   @type("number") dayCount: number = 0;
   @type("number") phaseEndsAt: number = 0;
 

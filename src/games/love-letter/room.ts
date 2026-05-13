@@ -31,6 +31,10 @@ type DeckStore = {
 export class LoveLetterRoom extends Room {
   state = new LoveLetterState();
   maxClients = 4;
+  autoDispose = true;
+  // If a creator never actually joins (closed tab right after create),
+  // drop the reservation fast instead of leaving a ghost room around.
+  seatReservationTimeout = 15;
   private store: DeckStore = { deck: [], burned: -1, privateHands: new Map() };
 
   onCreate(options: JoinOptions) {
@@ -118,12 +122,13 @@ export class LoveLetterRoom extends Room {
         kind: "system",
         actor: p.nickname,
       });
+      this.disposeIfEmpty();
       return;
     }
 
     try {
       if (consented) throw new Error("consented leave");
-      await this.allowReconnection(client, 60);
+      await this.allowReconnection(client, 30);
       p.connected = true;
       this.pushLog(`${p.nickname} 님 재접속`, {
         kind: "system",
@@ -142,6 +147,13 @@ export class LoveLetterRoom extends Room {
       const idx = this.state.turnOrder.indexOf(client.sessionId);
       if (idx >= 0) this.state.turnOrder.splice(idx, 1);
       this.checkRoundEnd();
+      this.disposeIfEmpty();
+    }
+  }
+
+  private disposeIfEmpty() {
+    if (this.state.players.size === 0) {
+      this.disconnect().catch(() => {});
     }
   }
 

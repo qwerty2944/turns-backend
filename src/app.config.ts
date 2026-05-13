@@ -7,7 +7,6 @@ import express from "express";
 
 import authRoutes from "./features/auth/routes.js";
 import roomRoutes from "./features/rooms/routes.js";
-import { initSchema } from "./shared/db/index.js";
 import { GAME_REGISTRY } from "./games/registry.js";
 
 // Build the rooms map at module-load time from the game registry.
@@ -19,7 +18,6 @@ const rooms = Object.fromEntries(
 export default defineServer({
   rooms,
   beforeListen: async () => {
-    await initSchema();
     for (const g of GAME_REGISTRY) {
       console.log(`[turns] registered game room: ${g.roomName}`);
     }

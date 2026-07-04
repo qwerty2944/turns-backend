@@ -12,8 +12,13 @@ const router = Router();
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const nicknameRegex = /^[\p{L}\p{N}_-]{2,12}$/u;
 
+// 이메일은 대소문자/공백 차이로 로그인이 튕기지 않도록 항상 정규화한다.
+const normEmail = (raw: unknown): string =>
+  typeof raw === "string" ? raw.trim().toLowerCase() : "";
+
 router.post("/signup", async (req: Request, res: Response) => {
-  const { email, password, passwordConfirm, nickname } = req.body ?? {};
+  const { password, passwordConfirm, nickname } = req.body ?? {};
+  const email = normEmail(req.body?.email);
 
   if (!email || !password || !passwordConfirm) {
     return res.status(400).json({ error: "이메일과 비밀번호를 입력해주세요" });
@@ -50,7 +55,8 @@ router.post("/signup", async (req: Request, res: Response) => {
 });
 
 router.post("/login", async (req: Request, res: Response) => {
-  const { email, password } = req.body ?? {};
+  const { password } = req.body ?? {};
+  const email = normEmail(req.body?.email);
   if (!email || !password) {
     return res.status(400).json({ error: "이메일과 비밀번호를 입력해주세요" });
   }
@@ -83,7 +89,12 @@ router.post("/login", async (req: Request, res: Response) => {
 });
 
 router.get("/me", requireAuth, (req: Request, res: Response) => {
-  return res.json({ user: req.user });
+  // login/signup과 동일한 형태({id, email, nickname})로 통일 — 클라이언트
+  // 파싱 불일치(id vs userId)로 인한 로그인 오류 방지.
+  const u = req.user!;
+  return res.json({
+    user: { id: u.userId, email: u.email, nickname: u.nickname },
+  });
 });
 
 router.patch(

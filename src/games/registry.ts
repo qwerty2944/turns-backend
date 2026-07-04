@@ -3,6 +3,7 @@ import { loveLetterManifest } from "./love-letter/index.js";
 import { mafiaManifest } from "./mafia/index.js";
 import { multitaskManifest } from "./multitask/index.js";
 import { tetrisManifest } from "./tetris/index.js";
+import { yeouidoManifest } from "./yeouido/index.js";
 
 // Register new games here. Each manifest is self-contained.
 export const GAME_REGISTRY: GameManifest[] = [
@@ -10,6 +11,7 @@ export const GAME_REGISTRY: GameManifest[] = [
   mafiaManifest,
   multitaskManifest,
   tetrisManifest,
+  yeouidoManifest,
 ];
 
 export const getGame = (id: string) =>

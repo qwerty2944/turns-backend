@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { env } from "../config/env.js";
+import { env } from "../common/config/env.js";
 import * as schema from "./schema.js";
 
 // Catch malformed connection strings (e.g. stray whitespace from a copy-paste

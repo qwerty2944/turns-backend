@@ -7,7 +7,7 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
-import type { AuthPayload } from "../../shared/auth/jwt.js";
+import type { AuthPayload } from "./jwt.js";
 import { CurrentUser, JwtAuthGuard } from "./auth.guard.js";
 import { AuthService } from "./auth.service.js";
 

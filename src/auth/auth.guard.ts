@@ -6,8 +6,8 @@ import {
   Injectable,
 } from "@nestjs/common";
 import type { Request } from "express";
-import { verifyAuthRequest } from "../../shared/auth/middleware.js";
-import type { AuthPayload } from "../../shared/auth/jwt.js";
+import { verifyAuthRequest } from "./token-verify.js";
+import type { AuthPayload } from "./jwt.js";
 
 /** Bearer JWT + tokenVersion 검증 — 기존 requireAuth 미들웨어와 동일 계약. */
 @Injectable()

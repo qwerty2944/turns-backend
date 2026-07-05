@@ -1,6 +1,6 @@
-import "../../shared/polyfill.js";
+import "../../common/polyfill.js";
 import { Schema, ArraySchema, MapSchema, type } from "@colyseus/schema";
-import { Spectator } from "../../shared/colyseus/spectator.js";
+import { Spectator } from "../../common/colyseus/spectator.js";
 
 export class TapTarget extends Schema {
   @type("number") id: number = 0;

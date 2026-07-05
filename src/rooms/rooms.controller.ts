@@ -1,9 +1,14 @@
-import { Controller, Get, Query } from "@nestjs/common";
+import { Controller, Get, Inject, Query } from "@nestjs/common";
 import { matchMaker } from "colyseus";
-import { GAME_REGISTRY } from "../../games/registry.js";
+import { GAME_REGISTRY_TOKEN } from "../games/games.module.js";
+import type { GameManifest } from "../games/types.js";
 
 @Controller()
 export class RoomsController {
+  constructor(
+    @Inject(GAME_REGISTRY_TOKEN) private readonly registry: GameManifest[],
+  ) {}
+
   @Get("health")
   health() {
     return { ok: true };
@@ -11,7 +16,7 @@ export class RoomsController {
 
   @Get("games")
   games() {
-    return GAME_REGISTRY.map((g) => ({
+    return this.registry.map((g) => ({
       id: g.id,
       roomName: g.roomName,
       displayName: g.displayName,
@@ -23,8 +28,8 @@ export class RoomsController {
   @Get("rooms")
   async rooms(@Query("game") gameId?: string) {
     const games = gameId
-      ? GAME_REGISTRY.filter((g) => g.id === gameId)
-      : GAME_REGISTRY;
+      ? this.registry.filter((g) => g.id === gameId)
+      : this.registry;
 
     const results: Array<{
       roomId: string;

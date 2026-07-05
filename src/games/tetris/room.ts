@@ -27,9 +27,9 @@ import {
   scoreForClear,
   shuffle7Bag,
 } from "./rules.js";
-import { verifyAuthRequest } from "../../shared/auth/middleware.js";
-import { Spectator, isSpectator } from "../../shared/colyseus/spectator.js";
-import { pickMasks } from "../../shared/colyseus/mask-nicknames.js";
+import { verifyAuthRequest } from "../../auth/token-verify.js";
+import { Spectator, isSpectator } from "../../common/colyseus/spectator.js";
+import { pickMasks } from "../../common/colyseus/mask-nicknames.js";
 
 type JoinOptions = {
   token?: string;

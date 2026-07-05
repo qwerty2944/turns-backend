@@ -1,7 +1,7 @@
 import { Room, Client, CloseCode } from "colyseus";
 import { YeouidoState, YeouidoPlayer, LogEntry } from "./state.js";
-import { verifyAuthRequest } from "../../shared/auth/middleware.js";
-import { Spectator, isSpectator } from "../../shared/colyseus/spectator.js";
+import { verifyAuthRequest } from "../../auth/token-verify.js";
+import { Spectator, isSpectator } from "../../common/colyseus/spectator.js";
 import { CARDS, DECKS, type CardDef, type Target } from "./cards.js";
 import { Engine, newStore, type YeouidoStore } from "./engine.js";
 import type { FxEvent } from "./fx.js";

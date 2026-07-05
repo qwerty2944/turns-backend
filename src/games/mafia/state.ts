@@ -1,6 +1,6 @@
-import "../../shared/polyfill.js";
+import "../../common/polyfill.js";
 import { Schema, ArraySchema, MapSchema, type } from "@colyseus/schema";
-import { Spectator } from "../../shared/colyseus/spectator.js";
+import { Spectator } from "../../common/colyseus/spectator.js";
 
 export class MafiaPlayer extends Schema {
   @type("string") sessionId: string = "";

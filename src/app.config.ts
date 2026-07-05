@@ -1,11 +1,11 @@
 // Symbol.metadata polyfill must run before any @colyseus/schema class loads.
-import "./shared/polyfill.js";
+import "./common/polyfill.js";
 
 import { defineServer, defineRoom, monitor } from "colyseus";
 import cors from "cors";
 import express from "express";
 
-import { mountNest } from "./nest/bootstrap.js";
+import { mountNest } from "./main.js";
 import { GAME_REGISTRY } from "./games/registry.js";
 
 // Build the rooms map at module-load time from the game registry.

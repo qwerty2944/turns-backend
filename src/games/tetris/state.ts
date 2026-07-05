@@ -1,6 +1,6 @@
-import "../../shared/polyfill.js";
+import "../../common/polyfill.js";
 import { Schema, ArraySchema, MapSchema, type } from "@colyseus/schema";
-import { Spectator } from "../../shared/colyseus/spectator.js";
+import { Spectator } from "../../common/colyseus/spectator.js";
 
 export const BOARD_W = 10;
 export const BOARD_H = 20;

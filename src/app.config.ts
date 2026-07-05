@@ -5,8 +5,7 @@ import { defineServer, defineRoom, monitor } from "colyseus";
 import cors from "cors";
 import express from "express";
 
-import authRoutes from "./features/auth/routes.js";
-import roomRoutes from "./features/rooms/routes.js";
+import { mountNest } from "./nest/bootstrap.js";
 import { GAME_REGISTRY } from "./games/registry.js";
 
 // Build the rooms map at module-load time from the game registry.
@@ -22,11 +21,13 @@ export default defineServer({
       console.log(`[turns] registered game room: ${g.roomName}`);
     }
   },
-  express: (app) => {
+  // Colyseus awaits this hook (Server.attach → await options.express(app)),
+  // so mounting Nest async here is safe. 게임 룸은 Colyseus 그대로,
+  // REST(auth/rooms)는 NestJS가 담당한다.
+  express: async (app) => {
     app.use(cors());
     app.use(express.json());
-    app.use("/auth", authRoutes);
-    app.use(roomRoutes); // /health, /games, /rooms
     app.use("/monitor", monitor());
+    await mountNest(app);
   },
 });
